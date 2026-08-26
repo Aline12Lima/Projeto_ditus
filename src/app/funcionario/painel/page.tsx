@@ -1,2 +1,2 @@
-import { Dashboard } from "@/components/restaurant-pages";
+import { Dashboard } from "@/components/funcionario/dashboard";
 export default function Page() { return <Dashboard />; }

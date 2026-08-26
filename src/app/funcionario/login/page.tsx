@@ -1,2 +1,2 @@
-import { Login } from "@/components/restaurant-pages";
+import { Login } from "@/components/funcionario/login";
 export default function Page() { return <Login />; }
