@@ -1,0 +1,18 @@
+/* Local interaction feedback and confirmation */
+.confirm-modal { width: 100%; max-width: 390px; border-radius: 16px; padding: 22px; background: white; box-shadow: 0 10px 32px #0004; }
+.confirm-modal h2 { margin: 0 0 8px; font-size: 20px; }
+.confirm-modal > p { color: #666; font-size: 13px; }
+.confirm-modal .solid-button { width: 100%; }
+.confirm-total { display: flex; justify-content: space-between; padding: 18px 0; margin: 12px 0 18px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; font-size: 18px; }
+.feedback-message { padding: 11px 12px; border-radius: 7px; font-size: 12px; line-height: 1.4; }
+.feedback-message.error { color: #8b1525; background: #fce8eb; border: 1px solid #efbdc5; }
+.checkout:disabled, .solid-button:disabled, .text-button:disabled { cursor: wait; opacity: .65; }
+.item-form select { width: 100%; margin-top: 6px; padding: 13px; border: 1px solid #ddd; border-radius: 6px; background: white; }
+.availability-field { display: flex !important; align-items: center; gap: 8px; }
+.availability-field input { margin: 0; width: auto; }
+.admin-dish.inactive { opacity: .58; }
+.admin-dish small { display: block; margin-top: 6px; color: #777; font-size: 10px; }
+.receipt-heading { margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px dashed #aaa; text-align: center; }
+.receipt-heading b, .receipt-heading small { display: block; }
+.receipt-heading small { margin-top: 4px; color: #777; }
+.order-controls { grid-template-columns: 1.4fr 1fr; }
