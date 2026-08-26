@@ -1,2 +1,2 @@
-import { Cart } from "@/components/restaurant-pages";
+import { Cart } from "@/components/cliente/cart";
 export default function Page() { return <Cart />; }
