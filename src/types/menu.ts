@@ -1,6 +1,6 @@
 export const MENU_CATEGORIES = ["Pizza", "Porções", "Hambúrgueres", "Bebidas", "Sobremesas"] as const;
 
-export type CategoryName = (typeof MENU_CATEGORIES)[number];
+export type CategoryName = string;
 
 export type Category = {
   id: string;
@@ -16,6 +16,11 @@ export type Product = {
   emoji: string;
   category: CategoryName;
   active: boolean;
+  categoryId?: string;
+  slug?: string;
+  imageUrl?: string | null;
+  nameTranslations?: Record<string, string>;
+  descriptionTranslations?: Record<string, string>;
 };
 
 export type Dish = Product;

@@ -1,40 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { INITIAL_DISHES } from "@/data/menu-items";
-import { readStorageJson } from "@/lib/storage";
-import { MENU_CATEGORIES, type CategoryName, type Dish } from "@/types/menu";
+import { useCallback, useEffect, useState } from "react";
+import type { Dish } from "@/types/menu";
 
-const MENU_STORAGE_KEY = "ditus-menu-items";
+export function useMenuItems(includeInactive = false, locale: "pt" | "en" | "es" = "pt") {
+  const [items, setItems] = useState<Dish[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-function isStoredMenu(value: unknown): value is Partial<Dish>[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null
-    && typeof item.id === "string" && typeof item.name === "string"
-    && typeof item.description === "string" && typeof item.price === "string"
-    && typeof item.emoji === "string");
-}
+  const refresh = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({ lang: locale });
+      if (includeInactive) params.set("includeInactive", "true");
+      const response = await fetch(`/api/products?${params}`, { cache: "no-store" });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Não foi possível carregar o cardápio.");
+      setItems(body as Dish[]);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "Não foi possível carregar o cardápio.");
+    } finally { setLoading(false); }
+  }, [includeInactive, locale]);
 
-function categoryForItem(item: Partial<Dish>): CategoryName {
-  if (item.category && MENU_CATEGORIES.includes(item.category)) return item.category;
-  if (item.id === "pizza") return "Pizza";
-  if (item.id === "fries") return "Porções";
-  return "Hambúrgueres";
-}
-
-export function useMenuItems() {
-  const [items, setItems] = useState<Dish[]>(INITIAL_DISHES);
-
-  useEffect(() => {
-    const parsedItems = readStorageJson<Partial<Dish>[] | null>(MENU_STORAGE_KEY, null, (value): value is Partial<Dish>[] | null => value === null || isStoredMenu(value));
-    if (parsedItems !== null) {
-      setItems(parsedItems.map((item) => ({ ...item, category: categoryForItem(item), active: item.active ?? true })) as Dish[]);
-    }
-  }, []);
-
-  function save(nextItems: Dish[]) {
-    window.localStorage.setItem(MENU_STORAGE_KEY, JSON.stringify(nextItems));
-    setItems(nextItems);
-  }
-
-  return { items, save };
+  useEffect(() => { void refresh(); }, [refresh]);
+  return { items, loading, error, refresh };
 }

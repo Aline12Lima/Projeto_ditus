@@ -40,4 +40,5 @@ export type Order = {
   paidAt?: string;
   notes?: string;
   sessionId?: string;
+  trackingToken?: string;
 };

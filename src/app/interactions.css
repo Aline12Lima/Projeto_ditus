@@ -6,6 +6,7 @@
 .confirm-total { display: flex; justify-content: space-between; padding: 18px 0; margin: 12px 0 18px; border-top: 1px solid #eee; border-bottom: 1px solid #eee; font-size: 18px; }
 .feedback-message { padding: 11px 12px; border-radius: 7px; font-size: 12px; line-height: 1.4; }
 .feedback-message.error { color: #8b1525; background: #fce8eb; border: 1px solid #efbdc5; }
+.feedback-message.success { color: #17683a; background: #e8f8ee; border: 1px solid #adddbc; }
 .checkout:disabled, .solid-button:disabled, .text-button:disabled { cursor: wait; opacity: .65; }
 .item-form select { width: 100%; margin-top: 6px; padding: 13px; border: 1px solid #ddd; border-radius: 6px; background: white; }
 .availability-field { display: flex !important; align-items: center; gap: 8px; }
@@ -16,3 +17,4 @@
 .receipt-heading b, .receipt-heading small { display: block; }
 .receipt-heading small { margin-top: 4px; color: #777; }
 .order-controls { grid-template-columns: 1.4fr 1fr; }
+.dash-header form button { border: 0; background: transparent; color: white; font-size: 22px; cursor: pointer; }
