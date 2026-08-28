@@ -1,0 +1,3 @@
+# Créditos das imagens de demonstração
+
+As fotos em `public/images/products` são provenientes do Unsplash e usadas conforme a [Unsplash License](https://unsplash.com/license). Originais: [pizza Margherita](https://unsplash.com/photos/1cdbab80d002), [pizza pepperoni](https://unsplash.com/photos/b28f40a0ae38), [batatas](https://unsplash.com/photos/bb080dd4f877), [anéis de cebola](https://unsplash.com/photos/03518883512d), [hambúrguer](https://unsplash.com/photos/23c9450c58cd), [refrigerante](https://unsplash.com/photos/3f66f32aef97) e [brownie](https://unsplash.com/photos/e75d5e30476c). Imagens enviadas pela operação ficam no bucket público `product-images`; somente usuários administrativos autenticados podem gravar ou remover objetos.

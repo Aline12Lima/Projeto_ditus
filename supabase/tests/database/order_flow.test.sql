@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(10);
+select plan(12);
 
 select is((select count(*)::integer from public.restaurant_tables), 45, 'seed creates 45 tables');
 
@@ -20,9 +20,11 @@ select throws_ok($$
   select * from public.create_order(2::smallint, '[{"product_id":"20000000-0000-4000-8000-000000000007","quantity":1}]'::jsonb, ''::text, '30000000-0000-4000-8000-000000000003'::uuid)
 $$, 'PRODUCT_NOT_FOUND_OR_INACTIVE', 'rejects inactive product');
 
-select throws_ok($$ select public.transition_order_status(1::bigint, 'PAGO'::public.order_status) $$, 'INVALID_STATUS_TRANSITION', 'rejects invalid transition');
-select lives_ok($$ select public.transition_order_status(1::bigint, 'EM_PREPARO'::public.order_status); select public.transition_order_status(1::bigint, 'PRONTO'::public.order_status); select public.transition_order_status(1::bigint, 'ENTREGUE'::public.order_status); select public.transition_order_status(1::bigint, 'AGUARDANDO_PAGAMENTO'::public.order_status); select public.transition_order_status(1::bigint, 'PAGO'::public.order_status) $$, 'accepts valid status flow');
+select throws_ok($$ select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'PAGO'::public.order_status) $$, 'INVALID_STATUS_TRANSITION', 'rejects invalid transition');
+select lives_ok($$ select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'EM_PREPARO'::public.order_status); select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'PRONTO'::public.order_status); select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'ENTREGUE'::public.order_status); select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'AGUARDANDO_PAGAMENTO'::public.order_status); select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'PAGO'::public.order_status) $$, 'accepts valid status flow');
 select is((select status::text from public.restaurant_tables where number = 1), 'AGUARDANDO_PAGAMENTO', 'keeps table open while another order is unpaid');
+select ok(public.validate_table_access(1::smallint, '40000000-0000-4000-8000-000000000001'::uuid), 'accepts configured table token');
+select is((select count(*)::integer from public.paid_sales_report('2000-01-01', '2100-01-01', 1::smallint)), 1, 'sales report includes only paid orders');
 
 select * from finish();
 rollback;

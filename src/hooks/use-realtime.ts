@@ -18,6 +18,7 @@ export function useAdminRealtime(onChange: () => void) {
       const channel = supabase.channel("admin-operations")
         .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, onChange)
         .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_tables" }, onChange)
+        .on("postgres_changes", { event: "*", schema: "public", table: "customer_visits" }, onChange)
         .subscribe();
       unsubscribe = () => { void supabase.removeChannel(channel); };
     }
@@ -45,4 +46,8 @@ export function useOrderRealtime(trackingToken: string | undefined, onChange: ()
     void subscribe();
     return () => { disposed = true; unsubscribe?.(); };
   }, [trackingToken, onChange]);
+}
+
+export function useCustomerVisitRealtime(trackingToken:string|undefined,onChange:()=>void){
+ useEffect(()=>{if(!trackingToken)return;let client;try{client=createBrowserSupabaseClient()}catch{return}const supabase=client;const channel=supabase.channel(`customer-visit:${trackingToken}`).on("broadcast",{event:"UPDATE"},onChange).subscribe();return()=>{void supabase.removeChannel(channel)}},[trackingToken,onChange]);
 }

@@ -1,4 +1,4 @@
-# Arquitetura do Ditos
+# Arquitetura do Ditus
 
 ## Relacionamentos
 

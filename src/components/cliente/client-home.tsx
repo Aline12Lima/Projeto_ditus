@@ -1,27 +1,4 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import { Logo, Mark } from "@/components/shared/logo";
-import { Shell } from "@/components/shared/shell";
-
-export function ClientHome() {
-  const [lang, setLang] = useState<"PT" | "ES" | "EN">("PT");
-  const languageStorageKey = "ditus-language";
-
-  useEffect(() => {
-    const saved = localStorage.getItem(languageStorageKey);
-    if (saved === "PT" || saved === "ES" || saved === "EN") setLang(saved);
-  }, []);
-
-  function changeLanguage(nextLanguage: "PT" | "ES" | "EN") {
-    setLang(nextLanguage);
-    localStorage.setItem(languageStorageKey, nextLanguage);
-  }
-  const copy = {
-    PT: { title: <>Bem-vindo ao<br />Restaurante Ditos.</>, description: "Escolha seu idioma e aproveite o sabor que aproxima.", menu: "Iniciar pedido", language: "Escolha o seu idioma", home: "Início", menuNav: "Cardápio", cart: "Carrinho", profile: "Perfil" },
-    ES: { title: <>Bienvenido al<br />Restaurante Ditos.</>, description: "Elige tu idioma y disfruta del sabor que une.", menu: "Empezar pedido", language: "Elige tu idioma", home: "Inicio", menuNav: "Menú", cart: "Carrito", profile: "Perfil" },
-    EN: { title: <>Welcome to<br />Restaurante Ditos.</>, description: "Choose your language and enjoy flavor that brings us together.", menu: "Start order", language: "Choose your language", home: "Home", menuNav: "Menu", cart: "Cart", profile: "Profile" },
-  }[lang];
-
-  return <Shell><header className="client-header"><Logo /><button className="language" onClick={() => changeLanguage(lang === "PT" ? "ES" : lang === "ES" ? "EN" : "PT")}>{lang}⌄</button></header><section className="client-home welcome-home"><div className="hero-photo"><div><Mark /><h1>{copy.title}</h1><p>{copy.description}</p><p className="language-label">{copy.language}</p><div className="language-options"><button className={lang === "PT" ? "selected" : ""} onClick={() => changeLanguage("PT")}>Português</button><button className={lang === "ES" ? "selected" : ""} onClick={() => changeLanguage("ES")}>Español</button><button className={lang === "EN" ? "selected" : ""} onClick={() => changeLanguage("EN")}>English</button></div><a href="/cliente/cardapio">{copy.menu}</a></div></div></section><nav className="bottom-nav client"><a className="active" href="/cliente">⌂<small>{copy.home}</small></a><a href="/cliente/cardapio">▤<small>{copy.menuNav}</small></a><a href="/cliente/carrinho">🛒<small>{copy.cart}</small></a><a>◉<small>{copy.profile}</small></a></nav></Shell>;
-}
+import { useEffect,useState } from "react";import { useRouter } from "next/navigation";import { Logo } from "@/components/shared/logo";import { Shell } from "@/components/shared/shell";
+type Language="PT"|"EN"|"ES";const labels={PT:"🇧🇷 Português",EN:"🇺🇸 English",ES:"🇪🇸 Español"} as const;
+export function ClientHome(){const router=useRouter();const [lang,setLang]=useState<Language>("PT"),[name,setName]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false);useEffect(()=>{const language=localStorage.getItem("ditus-language") as Language|null;if(language&&language in labels)setLang(language);setName(localStorage.getItem("ditus-customer-name")??"")},[]);function changeLanguage(next:Language){setLang(next);localStorage.setItem("ditus-language",next)}async function start(e:React.FormEvent){e.preventDefault();const normalized=name.trim();if(normalized.length<2)return;setLoading(true);setError("");try{const token=localStorage.getItem("ditus-customer-token")??crypto.randomUUID();const response=await fetch("/api/customer-visits",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:normalized,customerToken:token})});const visit=await response.json();if(!response.ok)throw new Error(visit.error??"Não foi possível iniciar o atendimento.");localStorage.setItem("ditus-customer-name",normalized);localStorage.setItem("ditus-customer-token",token);localStorage.setItem("ditus-visit-tracking-token",visit.trackingToken);router.push("/cliente/cardapio")}catch(reason){setError(reason instanceof Error?reason.message:"Não foi possível iniciar o atendimento.")}finally{setLoading(false)}}const copy={PT:{title:"Bem-vindo à Ditus",name:"Seu nome",placeholder:"Como podemos chamar você?",start:"Iniciar pedido"},EN:{title:"Welcome to Ditus",name:"Your name",placeholder:"What should we call you?",start:"Start order"},ES:{title:"Bienvenido a Ditus",name:"Tu nombre",placeholder:"¿Cómo podemos llamarte?",start:"Empezar pedido"}}[lang];return <Shell><header className="client-header"><Logo/><label className="language-select"><span className="sr-only">Idioma</span><select value={lang} onChange={e=>changeLanguage(e.target.value as Language)}>{Object.entries(labels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label></header><main className="clean-home"><form onSubmit={start}><span className="food-symbol" aria-hidden="true">🍽️</span><h1>{copy.title}</h1><label className="customer-name">{copy.name}<input value={name} onChange={e=>setName(e.target.value)} placeholder={copy.placeholder} maxLength={80} autoComplete="name" required minLength={2}/></label>{error&&<p className="feedback-message error" role="alert">{error}</p>}<button className="solid-button" type="submit" disabled={loading}>{loading?"Aguarde...":copy.start}</button></form></main></Shell>}

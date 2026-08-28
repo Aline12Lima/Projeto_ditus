@@ -2,6 +2,9 @@ insert into public.restaurant_tables(number)
 select number from generate_series(1, 45) as number
 on conflict (number) do nothing;
 
+-- Token previsível apenas no ambiente local/teste; produção mantém tokens aleatórios.
+update public.restaurant_tables set access_token='40000000-0000-4000-8000-000000000001' where number=1;
+
 insert into public.categories(id, slug, name_translations) values
   ('10000000-0000-4000-8000-000000000001', 'pizza', '{"pt":"Pizza","en":"Pizza","es":"Pizza"}'),
   ('10000000-0000-4000-8000-000000000002', 'porcoes', '{"pt":"Porções","en":"Sides","es":"Porciones"}'),
@@ -19,3 +22,14 @@ insert into public.products(id, category_id, slug, name_translations, descriptio
   ('20000000-0000-4000-8000-000000000006','10000000-0000-4000-8000-000000000004','soda','{"pt":"Refrigerante lata","en":"Canned soda","es":"Refresco en lata"}','{"pt":"Coca-Cola, Guaraná ou Coca-Cola Zero."}',8.00,'🥤'),
   ('20000000-0000-4000-8000-000000000007','10000000-0000-4000-8000-000000000005','brownie','{"pt":"Brownie com sorvete","en":"Brownie with ice cream","es":"Brownie con helado"}','{"pt":"Brownie de chocolate servido com sorvete de baunilha."}',19.90,'🍨')
 on conflict (id) do update set price = excluded.price, active = true;
+
+-- Fotos demonstrativas: Unsplash License, autoria e links em docs/image-credits.md.
+update public.products set image_url = case slug
+ when 'pizza-margherita' then '/images/products/pizza-margherita.jpg'
+ when 'pizza-pepperoni' then '/images/products/pizza-pepperoni.jpg'
+ when 'fries' then '/images/products/fries.jpg'
+ when 'onion-rings' then '/images/products/onion-rings.jpg'
+ when 'burger' then '/images/products/burger.jpg'
+ when 'soda' then '/images/products/soda.jpg'
+ when 'brownie' then '/images/products/brownie.jpg' end
+where slug in ('pizza-margherita','pizza-pepperoni','fries','onion-rings','burger','soda','brownie');

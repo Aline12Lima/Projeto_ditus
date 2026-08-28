@@ -33,6 +33,7 @@ export type OrderItem = {
 export type Order = {
   id: number;
   table: number;
+  customerName?: string;
   items: OrderItem[];
   total: number;
   status: OrderStatus;

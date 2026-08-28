@@ -10,3 +10,9 @@ export async function requireStaff() {
   if (!profile?.active) throw new ApiError(403, "Usuário sem acesso administrativo.");
   return { user, role: profile.role, admin };
 }
+
+export async function requireAdmin() {
+  const context = await requireStaff();
+  if (context.role !== "ADMIN") throw new ApiError(403, "Apenas administradores podem realizar esta operação.");
+  return context;
+}

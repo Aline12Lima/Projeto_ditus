@@ -8,8 +8,9 @@ type DbClient = SupabaseClient<Database>;
 type CreateOrderInput = z.infer<typeof createOrderSchema>;
 
 export async function createOrder(client: DbClient, input: CreateOrderInput) {
-  const { data, error } = await client.rpc("create_order", {
-    requested_table_number: input.table,
+  const { data, error } = await client.rpc("create_customer_order", {
+    requested_customer_name: input.customerName,
+    requested_customer_token: input.customerToken,
     requested_items: input.items.map((item) => ({ product_id: item.productId, quantity: item.quantity })),
     requested_notes: input.notes,
     requested_idempotency_key: input.idempotencyKey,
@@ -31,7 +32,7 @@ export async function getOrder(client: DbClient, id: number) {
   const { data: table, error: tableError } = await client.from("restaurant_tables").select("*").eq("id", session.table_id).single();
   if (tableError) throw tableError;
   return {
-    id: order.id, table: table.number,
+    id: order.id, table: table.number, customerName: session.customer_name ?? undefined,
     items: items.map((item) => ({ productId: item.product_id, name: item.product_name, price: formatPrice(Number(item.unit_price)), quantity: item.quantity })),
     total: Number(order.total), status: order.status, createdAt: order.created_at,
     paidAt: order.paid_at ?? undefined, notes: order.notes, sessionId: order.session_id,

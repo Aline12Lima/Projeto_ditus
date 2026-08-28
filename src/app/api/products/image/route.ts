@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/api/auth";
+import { apiErrorResponse,ApiError } from "@/lib/api/errors";
+const allowed=new Set(["image/jpeg","image/png","image/webp"]),maxSize=5*1024*1024;
+export async function POST(request:Request){try{const {admin}=await requireAdmin();const data=await request.formData();const file=data.get("image");if(!(file instanceof File))throw new ApiError(400,"Selecione uma imagem.");if(!allowed.has(file.type)||file.size>maxSize)throw new ApiError(400,"Use JPG, PNG ou WebP de até 5 MB.");const extension={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"}[file.type];const path=`products/${crypto.randomUUID()}.${extension}`;const {error}=await admin.storage.from("product-images").upload(path,file,{contentType:file.type});if(error)throw error;const {data:publicData}=admin.storage.from("product-images").getPublicUrl(path);return NextResponse.json({path,url:publicData.publicUrl},{status:201});}catch(error){return apiErrorResponse(error)}}

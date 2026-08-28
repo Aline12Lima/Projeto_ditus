@@ -1,7 +1,7 @@
 import type { Order } from "@/types/order";
 import { readStorageJson, writeStorageJson } from "@/lib/storage";
 
-export const TABLE_STORAGE_KEY = "ditus-table";
+export const TABLE_STORAGE_KEY = "ditus-table-access";
 export const LAST_ORDER_STORAGE_KEY = "ditus-last-order";
 
 function isStoredOrder(order: unknown): order is Order {

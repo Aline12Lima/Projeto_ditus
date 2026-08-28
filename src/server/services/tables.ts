@@ -6,7 +6,7 @@ type DbClient = SupabaseClient<Database>;
 export async function listTables(client: DbClient) {
   const { data, error } = await client.from("restaurant_tables").select("*").order("number");
   if (error) throw error;
-  return data;
+  return data.map((table) => ({ id:table.id,number:table.number,status:table.status,created_at:table.created_at,updated_at:table.updated_at }));
 }
 
 export async function getTableSession(client: DbClient, tableNumber: number) {

@@ -1,4 +1,4 @@
-# Ditos
+# Ditus
 
 Sistema de pedidos de restaurante em Next.js, TypeScript, Supabase/PostgreSQL, Supabase Auth e Realtime.
 
