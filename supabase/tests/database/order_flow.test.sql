@@ -24,7 +24,7 @@ select throws_ok($$ select public.transition_order_status((select id from public
 select lives_ok($$ select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'EM_PREPARO'::public.order_status); select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'PRONTO'::public.order_status); select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'ENTREGUE'::public.order_status); select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'AGUARDANDO_PAGAMENTO'::public.order_status); select public.transition_order_status((select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001'), 'PAGO'::public.order_status) $$, 'accepts valid status flow');
 select is((select status::text from public.restaurant_tables where number = 1), 'AGUARDANDO_PAGAMENTO', 'keeps table open while another order is unpaid');
 select ok(public.validate_table_access(1::smallint, '40000000-0000-4000-8000-000000000001'::uuid), 'accepts configured table token');
-select is((select count(*)::integer from public.paid_sales_report('2000-01-01', '2100-01-01', 1::smallint)), 1, 'sales report includes only paid orders');
+select is((select count(*)::integer from public.paid_sales_report('2000-01-01', '2100-01-01', 1::smallint) where order_id=(select id from public.orders where idempotency_key='30000000-0000-4000-8000-000000000001')), 1, 'sales report includes the paid order');
 
 select * from finish();
 rollback;

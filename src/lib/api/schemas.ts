@@ -10,6 +10,11 @@ export const createOrderSchema = z.object({
 });
 export const customerVisitSchema = z.object({ customerName:z.string().trim().min(2).max(80), customerToken:z.string().uuid() });
 export const assignCustomerVisitSchema = z.object({ tableNumber:z.number().int().min(1).max(45) });
+export const tableVisitSchema = z.object({ accessToken:z.string().uuid(),customerName:z.string().trim().min(2).max(80),customerToken:z.string().uuid() });
+export const reviseOrderSchema = z.object({ notes:z.string().max(1000).default(""),items:z.array(z.object({productId:z.string().uuid(),quantity:z.number().int().min(1).max(99)})).min(1) });
+export const paymentMethodSchema = z.enum(["PIX","CARTAO","DINHEIRO"]);
+export const customerOrderAccessSchema = z.object({ trackingToken:z.string().uuid() });
+export const orderReviewSchema = customerOrderAccessSchema.extend({rating:z.number().int().min(1).max(5),comment:z.string().max(1000).default("")});
 export const productSchema = z.object({
   categoryId: z.string().uuid(), slug: z.string().regex(/^[a-z0-9-]+$/),
   nameTranslations: z.record(z.string(), z.string().min(1)).refine((value) => Boolean(value.pt)),

@@ -23,12 +23,16 @@ export async function getOrder(client: DbClient, id: number) {
   const { data: order, error } = await client.from("orders").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
   if (!order) return null;
-  const [{ data: session, error: sessionError }, { data: items, error: itemsError }] = await Promise.all([
+  const [{ data: session, error: sessionError }, { data: items, error: itemsError }, {data:payment,error:paymentError},{data:review,error:reviewError}] = await Promise.all([
     client.from("table_sessions").select("*").eq("id", order.session_id).single(),
     client.from("order_items").select("*").eq("order_id", id).order("created_at"),
+    client.from("payment_requests").select("method,status").eq("order_id",id).maybeSingle(),
+    client.from("order_reviews").select("id").eq("order_id",id).maybeSingle(),
   ]);
   if (sessionError) throw sessionError;
   if (itemsError) throw itemsError;
+  if(paymentError)throw paymentError;
+  if(reviewError)throw reviewError;
   const { data: table, error: tableError } = await client.from("restaurant_tables").select("*").eq("id", session.table_id).single();
   if (tableError) throw tableError;
   return {
@@ -37,8 +41,11 @@ export async function getOrder(client: DbClient, id: number) {
     total: Number(order.total), status: order.status, createdAt: order.created_at,
     paidAt: order.paid_at ?? undefined, notes: order.notes, sessionId: order.session_id,
     trackingToken: order.tracking_token,
+    payment:payment??undefined,reviewed:Boolean(review),
   };
 }
+
+export async function reviseOrder(client:DbClient,id:number,input:{notes:string;items:{productId:string;quantity:number}[]}){const {data,error}=await client.rpc("revise_received_order",{requested_order_id:id,requested_notes:input.notes,requested_items:input.items.map(i=>({product_id:i.productId,quantity:i.quantity}))});if(error)throw error;return data}
 
 export async function listOrders(client: DbClient, tableNumber?: number) {
   const { data: orders, error } = await client.from("orders").select("*").order("created_at", { ascending: false });

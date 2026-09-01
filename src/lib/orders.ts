@@ -24,3 +24,8 @@ export function saveLastOrder(order: Order) {
 export function clearLastOrder() {
   window.localStorage.removeItem(LAST_ORDER_STORAGE_KEY);
 }
+
+export function clearCompletedCustomerFlow() {
+  [LAST_ORDER_STORAGE_KEY, "ditus-cart-items", "ditus-customer-name", "ditus-customer-token", "ditus-visit-tracking-token", TABLE_STORAGE_KEY]
+    .forEach((key) => window.localStorage.removeItem(key));
+}
