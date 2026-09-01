@@ -21,6 +21,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const { admin } = await requireStaff();
     const { id } = await context.params;
     const { status } = await request.json();
-    return NextResponse.json(await transitionOrder(admin, Number(id), orderStatusSchema.parse(status)));
+    const parsed=orderStatusSchema.parse(status);
+    if(parsed==="PAGO"||parsed==="AGUARDANDO_PAGAMENTO")throw new ApiError(400,"Use o fluxo de pagamento para esta transição.");
+    return NextResponse.json(await transitionOrder(admin, Number(id), parsed));
   } catch (error) { return apiErrorResponse(error); }
 }

@@ -19,6 +19,7 @@ export function useAdminRealtime(onChange: () => void) {
         .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, onChange)
         .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_tables" }, onChange)
         .on("postgres_changes", { event: "*", schema: "public", table: "customer_visits" }, onChange)
+        .on("postgres_changes", { event: "*", schema: "public", table: "payment_requests" }, onChange)
         .subscribe();
       unsubscribe = () => { void supabase.removeChannel(channel); };
     }

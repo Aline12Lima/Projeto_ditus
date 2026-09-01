@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {requireAdmin} from "@/lib/api/auth";import {apiErrorResponse} from "@/lib/api/errors";
+export async function GET(){try{const {admin}=await requireAdmin();const {data,error}=await admin.from("restaurant_tables").select("number,access_token").order("number");if(error)throw error;return NextResponse.json(data)}catch(error){return apiErrorResponse(error)}}

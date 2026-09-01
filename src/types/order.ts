@@ -8,6 +8,8 @@ export type OrderStatus =
   | "CANCELADO";
 
 export type TableStatus = "LIVRE" | "OCUPADA" | "AGUARDANDO_PAGAMENTO";
+export type PaymentMethod = "PIX" | "CARTAO" | "DINHEIRO";
+export type PaymentStatus = "REQUESTED" | "CUSTOMER_REPORTED" | "CONFIRMED" | "CANCELLED";
 
 export type RestaurantTable = {
   id: number;
@@ -42,4 +44,6 @@ export type Order = {
   notes?: string;
   sessionId?: string;
   trackingToken?: string;
+  payment?: { method: PaymentMethod; status: PaymentStatus };
+  reviewed?: boolean;
 };
