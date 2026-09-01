@@ -1,3 +1,3 @@
-import { ClientHome } from "@/components/restaurant-pages";
+import { ClientHome } from "@/components/cliente/client-home";
 
 export default function Page() { return <ClientHome />; }

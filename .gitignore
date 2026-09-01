@@ -6,8 +6,16 @@
 # next.js
 /.next/
 /out/
+/test-results/
+/playwright-report/
+/blob-report/
+/supabase/.temp/
+/supabase/.branches/
 
 # local environment files
+.env
+.env.*
+!.env.example
 .env*.local
 
 # logs

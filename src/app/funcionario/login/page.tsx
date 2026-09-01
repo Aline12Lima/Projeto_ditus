@@ -1,2 +1,3 @@
-import { Login } from "@/components/restaurant-pages";
-export default function Page() { return <Login />; }
+import { Suspense } from "react";
+import { Login } from "@/components/funcionario/login";
+export default function Page() { return <Suspense fallback={null}><Login /></Suspense>; }

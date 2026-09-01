@@ -1,0 +1,7 @@
+import type { SupabaseClient } from "@supabase/supabase-js"; import type { Database } from "@/types/database";
+type Client=SupabaseClient<Database>;
+function map(row:{visit_id:string;customer_name?:string;visit_status:string;tracking_token:string;table_number:number|null}){return {visitId:row.visit_id,customerName:row.customer_name, status:row.visit_status,trackingToken:row.tracking_token,tableNumber:row.table_number}}
+export async function createCustomerVisit(client:Client,name:string,token:string){const {data,error}=await client.rpc("create_customer_visit",{requested_customer_name:name,requested_token:token});if(error)throw error;return map({...data[0],customer_name:name})}
+export async function getCustomerVisit(client:Client,token:string){const {data,error}=await client.rpc("get_customer_visit",{requested_token:token});if(error)throw error;return data[0]?map(data[0]):null}
+export async function listWaitingVisits(client:Client){const {data,error}=await client.from("customer_visits").select("id,customer_name,status,created_at").eq("status","AGUARDANDO_MESA").order("created_at");if(error)throw error;return data.map(v=>({visitId:v.id,customerName:v.customer_name,status:v.status,tableNumber:null,createdAt:v.created_at}))}
+export async function assignCustomerVisit(client:Client,id:string,table:number){const {data,error}=await client.rpc("assign_customer_visit",{requested_visit_id:id,requested_table_number:table});if(error)throw error;return data[0]}

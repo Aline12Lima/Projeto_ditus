@@ -1,3 +1,3 @@
-import { EmployeeStart } from "@/components/restaurant-pages";
+import { EmployeeStart } from "@/components/funcionario/employee-start";
 
 export default function Page() { return <EmployeeStart />; }
