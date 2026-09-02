@@ -33,6 +33,7 @@ export type Database = {
       confirm_order_payment:{Args:{requested_order_id:number;requested_confirmed_by:string};Returns:Database["public"]["Tables"]["orders"]["Row"]};
       create_order_review:{Args:{requested_order_id:number;requested_tracking_token:string;requested_rating:number;requested_comment:string};Returns:Database["public"]["Tables"]["order_reviews"]["Row"]};
       product_sales_report:{Args:{date_from:string;date_to:string};Returns:{product_id:string;product_name:string;quantity:number;revenue:number}[]};
+      force_close_table_session:{Args:{requested_table_number:number;requested_admin_id:string};Returns:{table_number:number;session_id:string|null;cancelled_orders:number;table_status:Database["public"]["Enums"]["table_status"]}[]};
     };
     Enums: {
       order_status: "RECEBIDO" | "EM_PREPARO" | "PRONTO" | "ENTREGUE" | "AGUARDANDO_PAGAMENTO" | "PAGO" | "CANCELADO";
