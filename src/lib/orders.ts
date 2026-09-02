@@ -1,8 +1,6 @@
 import type { Order } from "@/types/order";
 import { readStorageJson, writeStorageJson } from "@/lib/storage";
-
-export const TABLE_STORAGE_KEY = "ditus-table-access";
-export const LAST_ORDER_STORAGE_KEY = "ditus-last-order";
+import { LAST_ORDER_STORAGE_KEY, resetCustomerFlow } from "@/lib/customer-flow";
 
 function isStoredOrder(order: unknown): order is Order {
   if (typeof order !== "object" || order === null) return false;
@@ -26,6 +24,5 @@ export function clearLastOrder() {
 }
 
 export function clearCompletedCustomerFlow() {
-  [LAST_ORDER_STORAGE_KEY, "ditus-cart-items", "ditus-customer-name", "ditus-customer-token", "ditus-visit-tracking-token", TABLE_STORAGE_KEY]
-    .forEach((key) => window.localStorage.removeItem(key));
+  resetCustomerFlow();
 }

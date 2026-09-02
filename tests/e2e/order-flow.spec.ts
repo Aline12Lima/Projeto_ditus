@@ -154,6 +154,10 @@ test("QR associa mesa diretamente, pagamento exige confirmação e cliente avali
 
 test("ADMIN encerra atendimento travado sem apagar o pedido", async ({ page, browser }) => {
   const customerName = `Force Close E2E ${Date.now()}`;
+  const adminContext = await browser.newContext();
+  const admin = await adminContext.newPage();
+  await loginAdmin(admin);
+  expect((await admin.request.post("/api/admin/tables/1/force-close")).ok()).toBe(true);
   await page.goto("/mesa/1?token=40000000-0000-4000-8000-000000000001");
   await page.getByLabel("Seu nome").fill(customerName);
   await page.getByRole("button", { name: "Iniciar pedido" }).click();
@@ -164,20 +168,68 @@ test("ADMIN encerra atendimento travado sem apagar o pedido", async ({ page, bro
   await page.getByRole("button", { name: "Confirmar e enviar pedido" }).click();
   await page.getByRole("link", { name: "Acompanhar pedido" }).click();
   await expect(page.getByText("Pedido recebido")).toBeVisible();
+  const oldOrderId = Number(page.url().match(/\/pedido\/(\d+)/)?.[1]);
+  const oldFlow = await page.evaluate(async () => {
+    const customerToken = localStorage.getItem("ditus-customer-token") ?? "";
+    const visit = await (await fetch(`/api/customer-visits?token=${encodeURIComponent(customerToken)}`)).json();
+    const order = JSON.parse(localStorage.getItem("ditus-last-order") ?? "null");
+    sessionStorage.setItem("ditus-order-idempotency-key", "71000000-0000-4000-8000-000000000001");
+    return { customerToken, visitId: visit.visitId, sessionId: order.sessionId };
+  });
 
-  const adminContext = await browser.newContext();
-  const admin = await adminContext.newPage();
-  await loginAdmin(admin);
   await admin.locator(".table-card").filter({ hasText: "Mesa 01" }).click();
   await admin.getByRole("button", { name: "Encerrar atendimento" }).click();
   await expect(admin.getByRole("dialog")).toContainText("cancelará pedidos ativos");
   await admin.getByRole("button", { name: "Confirmar e liberar mesa" }).click();
 
-  await expect(page.getByText("Cancelado")).toBeVisible();
+  await expect(page).toHaveURL(/\/mesa\/1\?token=/);
+  await expect(page.getByText("Este atendimento foi encerrado. Você pode iniciar um novo atendimento.")).toBeVisible();
+  await expect(page.getByLabel("Seu nome")).toHaveValue("");
+  const resetState = await page.evaluate(() => ({
+    name: localStorage.getItem("ditus-customer-name"),
+    cart: localStorage.getItem("ditus-cart-items"),
+    order: localStorage.getItem("ditus-last-order"),
+    customerToken: localStorage.getItem("ditus-customer-token"),
+    visitTrackingToken: localStorage.getItem("ditus-visit-tracking-token"),
+    idempotencyKey: sessionStorage.getItem("ditus-order-idempotency-key"),
+    tableAccess: JSON.parse(localStorage.getItem("ditus-table-access") ?? "null"),
+  }));
+  expect(resetState).toMatchObject({ name: null, cart: null, order: null, customerToken: null, visitTrackingToken: null, idempotencyKey: null });
+  expect(resetState.tableAccess).toMatchObject({ number: 1, viaQr: true, accessToken: "40000000-0000-4000-8000-000000000001" });
+  await expect.poll(async () => {
+    const tables = await (await admin.request.get("/api/tables")).json() as Array<{ number: number; status: string }>;
+    return tables.find((table) => table.number === 1)?.status;
+  }).toBe("LIVRE");
+
+  await page.reload();
+  await expect(page.getByLabel("Seu nome")).toHaveValue("");
+  const nextCustomerName = `After Force Close ${Date.now()}`;
+  await page.getByLabel("Seu nome").fill(nextCustomerName);
+  await page.getByRole("button", { name: "Iniciar pedido" }).click();
+  await page.locator(".dish").first().getByRole("button", { name: /Adicionar .* ao carrinho/ }).click();
+  await page.getByText("Ver carrinho").click();
+  await page.getByRole("button", { name: /Confirmar pedido/ }).click();
+  await page.getByRole("button", { name: "Confirmar e enviar pedido" }).click();
+  await page.getByRole("link", { name: "Acompanhar pedido" }).click();
+  await expect(page.getByText("Pedido recebido")).toBeVisible();
+  const newOrderId = Number(page.url().match(/\/pedido\/(\d+)/)?.[1]);
+  const newFlow = await page.evaluate(async () => {
+    const customerToken = localStorage.getItem("ditus-customer-token") ?? "";
+    const visit = await (await fetch(`/api/customer-visits?token=${encodeURIComponent(customerToken)}`)).json();
+    const order = JSON.parse(localStorage.getItem("ditus-last-order") ?? "null");
+    return { customerToken, visitId: visit.visitId, sessionId: order.sessionId, status: order.status };
+  });
+  expect(newOrderId).not.toBe(oldOrderId);
+  expect(newFlow.customerToken).not.toBe(oldFlow.customerToken);
+  expect(newFlow.visitId).not.toBe(oldFlow.visitId);
+  expect(newFlow.sessionId).not.toBe(oldFlow.sessionId);
+  expect(newFlow.status).toBe("RECEBIDO");
+  const oldOrder = await (await admin.request.get(`/api/orders/${oldOrderId}`)).json();
+  expect(oldOrder.status).toBe("CANCELADO");
   await expect.poll(async () => {
     const response = await admin.request.get("/api/tables");
     const tables = await response.json() as Array<{ number: number; status: string }>;
     return tables.find((table) => table.number === 1)?.status;
-  }).toBe("LIVRE");
+  }).toBe("OCUPADA");
   await adminContext.close();
 });
