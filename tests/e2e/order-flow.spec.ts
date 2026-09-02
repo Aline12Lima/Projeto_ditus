@@ -48,6 +48,7 @@ async function loginAdmin(admin: import("@playwright/test").Page) {
     admin.getByRole("button", { name: "Entrar" }).click(),
   ]);
   await expect.poll(async () => (await admin.request.get("/api/admin/customer-visits")).status()).toBe(200);
+  await expect(admin.getByText("Tempo real ativo")).toBeVisible();
 }
 
 test("admin associa mesa e cliente cria pedido", async ({ page, browser }) => {
@@ -72,6 +73,7 @@ test("admin associa mesa e cliente cria pedido", async ({ page, browser }) => {
   await page.getByRole("button", { name: "Confirmar e enviar pedido" }).click();
   await expect(page.getByText("Pedido enviado!")).toBeVisible();
   await expect(page.getByRole("link", { name: "Acompanhar pedido" })).toBeVisible();
+  await expect(admin.getByText("Novo pedido recebido")).toBeVisible();
 
   await admin.reload();
   const orderLink = admin.locator(".order").filter({ hasText: customerName });
@@ -79,6 +81,7 @@ test("admin associa mesa e cliente cria pedido", async ({ page, browser }) => {
   await orderLink.click();
   await admin.evaluate(() => { window.print = () => undefined; });
   await admin.getByRole("button", { name: "Enviar para cozinha e imprimir" }).click();
+  await expect(admin.getByText("Pedido enviado para cozinha")).toBeVisible();
   await admin.getByRole("button", { name: "Marcar como pronto" }).click();
   await admin.getByRole("button", { name: "Pedido entregue" }).click();
   await page.getByRole("link", { name: "Acompanhar pedido" }).click();
@@ -137,6 +140,7 @@ test("QR associa mesa diretamente, pagamento exige confirmação e cliente avali
   await page.getByRole("button",{name:"Dinheiro"}).click();
   await expect(page.getByText(/Garçom solicitado/)).toBeVisible();
   await expect(page.getByText("Pago")).toHaveCount(0);
+  await expect(admin.getByText("Pagamento solicitado por dinheiro")).toBeVisible();
   await expect(admin.getByText(/DINHEIRO/)).toBeVisible({timeout:15000});
   await admin.getByRole("button",{name:"Confirmar pagamento recebido"}).click();
   await expect(page.getByRole("heading",{name:"Obrigado!"})).toBeVisible();
@@ -145,5 +149,35 @@ test("QR associa mesa diretamente, pagamento exige confirmação e cliente avali
   await page.getByRole("button",{name:"Enviar avaliação"}).click();
   await expect(page.getByText("Obrigado pela sua avaliação!")).toBeVisible();
   expect(trackingHref).toContain("token=");
+  await adminContext.close();
+});
+
+test("ADMIN encerra atendimento travado sem apagar o pedido", async ({ page, browser }) => {
+  const customerName = `Force Close E2E ${Date.now()}`;
+  await page.goto("/mesa/1?token=40000000-0000-4000-8000-000000000001");
+  await page.getByLabel("Seu nome").fill(customerName);
+  await page.getByRole("button", { name: "Iniciar pedido" }).click();
+  await expect(page.getByRole("heading", { name: "Cardápio" })).toBeVisible();
+  await page.locator(".dish").first().getByRole("button", { name: /Adicionar .* ao carrinho/ }).click();
+  await page.getByText("Ver carrinho").click();
+  await page.getByRole("button", { name: /Confirmar pedido/ }).click();
+  await page.getByRole("button", { name: "Confirmar e enviar pedido" }).click();
+  await page.getByRole("link", { name: "Acompanhar pedido" }).click();
+  await expect(page.getByText("Pedido recebido")).toBeVisible();
+
+  const adminContext = await browser.newContext();
+  const admin = await adminContext.newPage();
+  await loginAdmin(admin);
+  await admin.locator(".table-card").filter({ hasText: "Mesa 01" }).click();
+  await admin.getByRole("button", { name: "Encerrar atendimento" }).click();
+  await expect(admin.getByRole("dialog")).toContainText("cancelará pedidos ativos");
+  await admin.getByRole("button", { name: "Confirmar e liberar mesa" }).click();
+
+  await expect(page.getByText("Cancelado")).toBeVisible();
+  await expect.poll(async () => {
+    const response = await admin.request.get("/api/tables");
+    const tables = await response.json() as Array<{ number: number; status: string }>;
+    return tables.find((table) => table.number === 1)?.status;
+  }).toBe("LIVRE");
   await adminContext.close();
 });
