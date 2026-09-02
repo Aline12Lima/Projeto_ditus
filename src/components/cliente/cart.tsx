@@ -7,6 +7,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useMenuItems } from "@/hooks/use-menu-items";
 import { formatPrice, toNumber } from "@/lib/formatters";
 import { clearLastOrder, getLastOrder, saveLastOrder } from "@/lib/orders";
+import { clearPendingOrderRequest, getOrCreateIdempotencyKey } from "@/lib/customer-flow";
 import type { Order } from "@/types/order";
 import { useCustomerVisitRealtime } from "@/hooks/use-realtime";
 import type { CustomerVisit } from "@/types/customer-visit";
@@ -51,7 +52,7 @@ export function Cart() {
     setIsSubmitting(true);
     setErrorMessage("");
     try {
-      idempotencyKeyRef.current ??= crypto.randomUUID();
+      idempotencyKeyRef.current ??= getOrCreateIdempotencyKey();
       const response = await fetch("/api/orders", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customerName, customerToken, notes, idempotencyKey: idempotencyKeyRef.current, items: lines.map(({ dish, quantity }) => ({ productId: dish.id, quantity })) }),
@@ -65,6 +66,8 @@ export function Cart() {
         sessionId: result.session_id, trackingToken: result.tracking_token,
       };
       saveLastOrder(nextOrder);
+      clearPendingOrderRequest();
+      idempotencyKeyRef.current = null;
       clear();
       setSentOrder(nextOrder);
       setIsConfirming(false);
@@ -78,6 +81,8 @@ export function Cart() {
 
   function continueShopping() {
     clearLastOrder();
+    clearPendingOrderRequest();
+    idempotencyKeyRef.current = null;
     setSentOrder(null);
   }
 

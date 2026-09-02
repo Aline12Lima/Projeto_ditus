@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { readStorageJson, writeStorageJson } from "@/lib/storage";
+import { CART_STORAGE_KEY } from "@/lib/customer-flow";
 import type { CartItem } from "@/types/menu";
-
-const CART_STORAGE_KEY = "ditus-cart-items";
 
 function isCart(value: unknown): value is CartItem[] {
   return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null
